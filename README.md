@@ -1,4 +1,4 @@
-# Project Core
+# ExpandCore
 
 Bienvenue dans Project Core, une application évolutive pour gérer des modules personnalisés. Ce projet a été conçu avec une architecture modulaire, ce qui permet d'ajouter facilement de nouveaux modules et de maintenir une évolutivité.
 
