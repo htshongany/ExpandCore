@@ -1,11 +1,15 @@
-# config.py
+import configparser
 
-DATABASE = "todos.db"
-PID_FILE = "service.pid"
-SERVICE_NAME = "UrlTodoListService"
+# Créer un objet ConfigParser
+config = configparser.ConfigParser()
 
-# load module 
-MODULES = {
-    "0": "url_todo_list",
-    # "1": 'test_module',
-}
+# Lire le fichier de configuration
+config.read('config.ini')
+
+# Charger les variables
+DATABASE = config['variables'].get('DATABASE', 'todos.db')
+PID_FILE = config['variables'].get('PID_FILE', 'service.pid')
+SERVICE_NAME = config['variables'].get('SERVICE_NAME', 'UrlTodoListService')
+
+# Charger les modules
+MODULES = {str(i): module for i, (key, module) in enumerate(config['modules'].items())}
