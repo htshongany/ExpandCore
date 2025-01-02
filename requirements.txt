@@ -1,0 +1,4 @@
+notify2==0.3.1
+psutil==6.1.1
+rich==13.9.4
+win10toast==0.8
