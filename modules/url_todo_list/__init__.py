@@ -1,7 +1,6 @@
 from rich.console import Console
 from rich.table import Table
 from rich.prompt import Prompt
-from core.notifications import send_notification
 from .database import create_connection, create_table, add_url, update_url_status, fetch_all_urls, fetch_urls_by_status, delete_url
 from .utils import export_to_csv, is_valid_url
 from config import DATABASE
@@ -35,12 +34,10 @@ def main():
             elif choice == "6":
                 display_urls_by_status(conn, False)
             elif choice == "7":
-                send_notification_for_url(conn)
-            elif choice == "8":
                 export_urls_to_csv_console(conn)
-            elif choice == "9":
+            elif choice == "8":
                 delete_url_console(conn)
-            elif choice == "10":
+            elif choice == "9":
                 break
             else:
                 console.print("[bold red]Invalid option. Please choose a valid option.[/bold red]")
@@ -138,14 +135,6 @@ def display_urls_by_status(conn, status):
     except Exception as e:
         console.print(f"[bold red]Failed to display URLs by status: {e}[/bold red]")
 
-def send_notification_for_url(conn):
-    try:
-        url_id = int(Prompt.ask("Enter the ID of the URL for sending notification"))
-        url = fetch_all_urls(conn)[url_id - 1]
-        send_notification("Reading Reminder", f"Read URL: {url[1]}")
-        console.print("[bold green]Notification sent![bold green]")
-    except Exception as e:
-        console.print(f"[bold red]Failed to send notification: {e}[/bold red]")
 
 def export_urls_to_csv_console(conn):
     try:
