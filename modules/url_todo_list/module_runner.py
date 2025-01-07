@@ -20,10 +20,11 @@ def pause_for_error():
 
 def get_database_path(db_name=None):
     """Get the path to the database file. If not defined, use 'todos.db'."""
-    if db_name:
-        return os.path.join(os.path.dirname(os.path.abspath(__file__)), db_name)
+    if db_name != None:
+        return db_name
     else:
-        return os.path.join(os.path.dirname(os.path.abspath(__file__)), 'todos.db')
+        return os.path.join(os.path.dirname(__file__), 'todos.db')
+
 
 def create_connection(db_file):
     """Create a database connection to the SQLite database"""
@@ -34,6 +35,24 @@ def create_connection(db_file):
     except sqlite3.Error as e:
         console.print(f"[bold red]Failed to create connection to database {db_file}: {e}[/bold red]")
         return conn
+
+def initialize_database(conn):
+    """Initialize the database with the required table if it doesn't exist"""
+    create_table_sql = """
+    CREATE TABLE IF NOT EXISTS urls (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        url TEXT NOT NULL,
+        description TEXT,
+        category TEXT,
+        status BOOLEAN NOT NULL CHECK (status IN (0, 1))
+    );
+    """
+    try:
+        cur = conn.cursor()
+        cur.execute(create_table_sql)
+        conn.commit()
+    except sqlite3.Error as e:
+        console.print(f"[bold red]Failed to initialize database: {e}[/bold red]")
 
 def fetch_all_urls(conn):
     """Fetch all URLs from the table"""
@@ -118,7 +137,7 @@ def delete_url(conn):
         cur = conn.cursor()
         cur.execute(sql, (url_id,))
         conn.commit()
-        console.print(f"[bold green]URL with ID {url_id} deleted successfully![/bold green]")
+        console.print(f"[bold green]URL with ID {url_id} deleted successfully![bold green]")
     except sqlite3.Error as e:
         console.print(f"[bold red]Failed to delete URL: {e}[/bold red]")
     finally:
@@ -168,7 +187,7 @@ def update_url(conn):
         cur = conn.cursor()
         cur.execute(sql, tuple(params))
         conn.commit()
-        console.print(f"[bold green]URL with ID {url_id} updated successfully![/bold green]")
+        console.print(f"[bold green]URL with ID {url_id} updated successfully![bold green]")
     except sqlite3.Error as e:
         console.print(f"[bold red]Failed to update URL: {e}[/bold red]")
     finally:
@@ -227,6 +246,42 @@ def view_urls(conn):
         # pause_for_error(False)
     pause_for_error()
 
+def export_urls(conn):
+    """Export URLs to a file"""
+    clear_console()
+    console.print("\n[bold cyan]Export Options:[/bold cyan]")
+    table = Table(show_header=True, header_style="bold magenta")
+    table.add_column("Option", style="dim", width=12)
+    table.add_column("Format", justify="left")
+
+    export_options = {
+        "1": "CSV",
+        "2": "JSON",
+        "3": "XML"
+    }
+
+    for key, option in export_options.items():
+        table.add_row(key, option)
+
+    console.print(table)
+
+    choice = console.input("\n[bold yellow]Select an export format:[/bold yellow] ")
+    filename = console.input("\n[bold yellow]Enter the filename:[/bold yellow] ")
+
+    urls = fetch_all_urls(conn)
+    if choice == "1":
+        export_to_csv(urls, filename)
+    elif choice == "2":
+        export_to_json(urls, filename)
+    elif choice == "3":
+        export_to_xml(urls, filename)
+    else:
+        console.print("[bold red]Invalid export format.[/bold red]")
+        pause_for_error()
+        return
+
+    console.print(f"[bold green]URLs exported successfully to {filename}.[/bold green]")
+    pause_for_error()
 
 def run():
     # Get the database path
@@ -235,40 +290,8 @@ def run():
     if not conn:
         return
 
-    # Handle export/import via command line args
-    if len(sys.argv) > 1:
-        command = sys.argv[1].lower()
-
-        if command == 'export':
-            if len(sys.argv) != 4:
-                console.print("[bold red]Usage: python script.py export [csv|json|xml] filename[/bold red]")
-                pause_for_error()
-                return
-            export_choice = sys.argv[2]
-            filename = sys.argv[3]
-            urls = fetch_all_urls(conn)
-            if export_choice == "csv":
-                export_to_csv(urls, filename)
-            elif export_choice == "json":
-                export_to_json(urls, filename)
-            elif export_choice == "xml":
-                export_to_xml(urls, filename)
-            else:
-                console.print("[bold red]Invalid export format.[/bold red]")
-            pause_for_error()
-        elif command == 'import':
-            if len(sys.argv) != 4:
-                console.print("[bold red]Usage: python script.py import [csv|json|xml] filename[/bold red]")
-                pause_for_error()
-                return
-            import_choice = sys.argv[2]
-            filename = sys.argv[3]
-            push_to_database(conn, filename, import_choice)
-            pause_for_error()
-        else:
-            console.print("[bold red]Invalid command.[/bold red]")
-            pause_for_error()
-        return
+    # Initialize the database
+    initialize_database(conn)
 
     while True:
         # Interactive Console Menu
@@ -283,7 +306,8 @@ def run():
             "2": "Delete URL",
             "3": "View URLs",
             "4": "Update URL",
-            "5": "Exit"
+            "5": "Export URLs",
+            "6": "Exit"
         }
 
         for key, option in main_options.items():
@@ -302,14 +326,13 @@ def run():
         elif choice == "4":
             update_url(conn)
         elif choice == "5":
+            export_urls(conn)
+        elif choice == "6":
             console.print("[bold cyan]Exiting...[/bold cyan]")
             break
         else:
             console.print("[bold red]Invalid selection.[/bold red]")
             pause_for_error()
-
-        pause_for_error()
-
 
 if __name__ == "__main__":
     run()
