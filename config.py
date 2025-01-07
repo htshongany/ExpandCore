@@ -12,8 +12,6 @@ config.read(os.path.join(base_path, 'config.ini'))
 
 # Charger les variables
 DATABASE = config['variables'].get('DATABASE', 'todos.db')
-PID_FILE = config['variables'].get('PID_FILE', 'service.pid')
-SERVICE_NAME = config['variables'].get('SERVICE_NAME', 'UrlTodoListService')
 
 # Charger les modules sans clés explicites
 MODULES = {str(i): module for i, module in enumerate(config['modules']) if module is not None}
