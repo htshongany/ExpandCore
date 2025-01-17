@@ -6,7 +6,7 @@ from rich.console import Console
 from rich.table import Table
 from config import DATABASE
 from modules.url_todo_list.utils import (
-    is_valid_url, export_to_csv, export_to_json, export_to_xml, push_to_database
+    is_valid_url, export_to_csv, export_to_json, export_to_xml
 )
 
 console = Console()
